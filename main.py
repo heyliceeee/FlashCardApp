@@ -1,4 +1,5 @@
 import os
+import time
 from tkinter import *
 import pandas as pd
 import random
@@ -16,11 +17,13 @@ def next_card():
     """
     show the next card
     """
-    current_card = get_random_word(translations_dict)
-    first_key = next(iter(current_card))
+    global current_card
+    current_card = get_random_word(translations_dict) # get a random word from the dictionary
+    first_language_name = list(current_card.keys())[0] # get the first key of the dictionary
+    second_language_name = list(current_card.keys())[1] # get the second key of the dictionary
 
-    canvas.itemconfig(title_text, text=first_key)
-    canvas.itemconfig(word_title, text=current_card[first_key])
+    create_card("front", first_language_name, current_card[first_language_name], "black") # show the front card
+    window.after(3000, lambda: create_card("back", second_language_name, current_card[second_language_name], "white")) # show the back card after 3 seconds
 def get_random_word(dict):
     """
     get a random word from the dictionary
@@ -37,7 +40,7 @@ def create_window():
     window.title("Flashy") # set the title of the window
     window.config(padx=50, pady=50) # set the padding of the window
     window.tk.call("tk_setPalette", BACKGROUND_COLOR) # set the background color of the window
-def create_canvas(card_side, title, word):
+def create_card(card_side, title, word, font_color):
     """
     create a canvas
     """
@@ -48,8 +51,8 @@ def create_canvas(card_side, title, word):
     canvas.card_img = card_img # assign the image to a variable
     canvas.create_image(400, 263, image=card_img) # place the image
 
-    title_text = canvas.create_text(400, 150, text=title, fill="black", font=(FONT_NAME, 40, "italic"))
-    word_title = canvas.create_text(400, 263, text=word, fill="black", font=(FONT_NAME, 60, "bold"))
+    title_text = canvas.create_text(400, 150, text=title, fill=font_color, font=(FONT_NAME, 40, "italic"))
+    word_title = canvas.create_text(400, 263, text=word, fill=font_color, font=(FONT_NAME, 60, "bold"))
 
     canvas.grid(column=0, row=0, columnspan=2) # place the canvas on the window
 def create_btns():
@@ -70,7 +73,6 @@ def create_btns():
 
 window = Tk() # create a window
 create_window() # call the function to create the window
-create_canvas("front", "", "") # call the function to create the canvas
 create_btns() # call the function to create the buttons
 
 df = pd.read_csv(dir_path + WORDS) # read the csv file
