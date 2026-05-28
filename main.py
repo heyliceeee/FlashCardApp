@@ -7,9 +7,21 @@ import random
 BACKGROUND_COLOR = "#B1DDC6"
 FONT_NAME = "Ariel"
 WORDS = "/data/french_words.csv"
+LEARN = "/data/words_learn.csv"
 dir_path = os.path.dirname(os.path.realpath(__file__)) # get the path of the current file
 
+
 def right():
+    """
+    when the user clicks the right button, remove the current word from the dictionary and show the next card
+    """
+    global translations_dict, current_index
+
+    if not translations_dict:
+        return # if the dictionary is empty, do nothing
+
+    translations_dict.pop(current_index) # remove the current word from the dictionary
+    export_words_learn()  # export the words that I need to learn to a csv
     next_card() # call the function to show the next card
 def wrong():
     next_card() # call the function to show the next card
@@ -17,13 +29,26 @@ def next_card():
     """
     show the next card
     """
-    global current_card
-    current_card = get_random_word(translations_dict) # get a random word from the dictionary
-    first_language_name = list(current_card.keys())[0] # get the first key of the dictionary
-    second_language_name = list(current_card.keys())[1] # get the second key of the dictionary
+    global current_card, current_index
 
-    create_card("front", first_language_name, current_card[first_language_name], "black") # show the front card
-    window.after(3000, lambda: create_card("back", second_language_name, current_card[second_language_name], "white")) # show the back card after 3 seconds
+    if not translations_dict: # if the dictionary is empty
+        if os.path.exists(dir_path + LEARN): # check if the file exists
+            os.remove(dir_path + LEARN) # remove the file
+
+        create_card("front", "Congratulates", "You finished! 🥳", "black") # show the front card
+        wrong_btn.config(state="disabled")
+        right_btn.config(state="disabled")
+        return
+
+    else: # if the dictionary is not empty
+        current_card = get_random_word(translations_dict) # get a random word from the dictionary
+        current_index = translations_dict.index(current_card) # get the index of the current word in the dictionary
+
+        first_language_name = list(current_card.keys())[0] # get the first key of the dictionary
+        second_language_name = list(current_card.keys())[1] # get the second key of the dictionary
+
+        create_card("front", first_language_name, current_card[first_language_name], "black") # show the front card
+        window.after(3000, lambda: create_card("back", second_language_name, current_card[second_language_name], "white")) # show the back card after 3 seconds
 def get_random_word(dict):
     """
     get a random word from the dictionary
@@ -31,6 +56,18 @@ def get_random_word(dict):
     :return: random word
     """
     return random.choice(dict)
+def export_words_learn():
+    """
+    export the words that I need to learn to a csv
+    """
+    global translations_dict
+
+    try:
+        df = pd.DataFrame.from_dict(translations_dict) # convert the dictionary to a dataframe
+        df.to_csv(dir_path + "/data/words_learn.csv", index=False) # export the dataframe to a csv file
+
+    except Exception as e:
+        print(f"Error saving CSV: {e}")
 
 # UI setup
 def create_window():
@@ -75,7 +112,12 @@ window = Tk() # create a window
 create_window() # call the function to create the window
 create_btns() # call the function to create the buttons
 
-df = pd.read_csv(dir_path + WORDS) # read the csv file
+if os.path.exists(dir_path + LEARN) and os.path.getsize(dir_path + LEARN) > 0: # check if the file exists and is not empty
+    df = pd.read_csv(dir_path + LEARN) # read the csv file
+
+else: # if the file does not exist or is empty
+    df = pd.read_csv(dir_path + WORDS)  # read the csv file
+
 translations_dict = df.to_dict(orient="records") # convert the dataframe to a dictionary
 
 next_card() # call the function to show the next card
