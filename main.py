@@ -1,5 +1,7 @@
 import os
 from tkinter import *
+import pandas as pd
+import random
 
 BACKGROUND_COLOR = "#B1DDC6"
 FONT_NAME = "Ariel"
@@ -7,15 +9,25 @@ WORDS = "/data/french_words.csv"
 dir_path = os.path.dirname(os.path.realpath(__file__)) # get the path of the current file
 
 def right():
-    """
-    when the user clicks the right button, do something
-    """
-    pass
+    next_card() # call the function to show the next card
 def wrong():
+    next_card() # call the function to show the next card
+def next_card():
     """
-    when the user clicks the wrong button, do something
+    show the next card
     """
-    pass
+    current_card = get_random_word(translations_dict)
+    first_key = next(iter(current_card))
+
+    canvas.itemconfig(title_text, text=first_key)
+    canvas.itemconfig(word_title, text=current_card[first_key])
+def get_random_word(dict):
+    """
+    get a random word from the dictionary
+    :param dict: dictionary
+    :return: random word
+    """
+    return random.choice(dict)
 
 # UI setup
 def create_window():
@@ -58,6 +70,12 @@ def create_btns():
 
 window = Tk() # create a window
 create_window() # call the function to create the window
-create_canvas("front", "French", "Word") # call the function to create the canvas
+create_canvas("front", "", "") # call the function to create the canvas
 create_btns() # call the function to create the buttons
+
+df = pd.read_csv(dir_path + WORDS) # read the csv file
+translations_dict = df.to_dict(orient="records") # convert the dataframe to a dictionary
+
+next_card() # call the function to show the next card
+
 window.mainloop() # continuously run the program
